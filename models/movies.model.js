@@ -3,8 +3,8 @@ import { randomUUID } from "crypto";
 
 const movies = await readJSON("./movies.json");
 
-export class MovieModel {
-  static getALlMovies({ genre }) {
+export class MoviesModel {
+  static getAllMovies({ genre }) {
     if (genre) {
       return movies.filter((movie) =>
         movie.genre.some((g) => g.toLowerCase() === genre.toLowerCase()),
@@ -45,6 +45,6 @@ export class MovieModel {
     if (movieIndex) return null;
 
     const filteredMovie = movies.splice(movieIndex, 1);
-    return movies.find((movie) => movie.id === id);
+    return movies[movieIndex];
   }
 }
