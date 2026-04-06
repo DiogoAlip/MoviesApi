@@ -1,3 +1,15 @@
+import mysql from "mysql2/promise";
+
+const config = {
+  host: "localhost",
+  user: "root",
+  port: 3306,
+  password: "rootpassword",
+  database: "movie_api_db",
+};
+
+const connection = await mysql.createConnection(config);
+
 import { readJSON } from "../utils/readJSON.utils.js";
 import { randomUUID } from "crypto";
 
@@ -47,4 +59,6 @@ export class MoviesModel {
     const filteredMovie = movies.splice(movieIndex, 1);
     return movies[movieIndex];
   }
+
+  static seedMovies() {}
 }

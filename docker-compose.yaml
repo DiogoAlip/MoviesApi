@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: movie_api_container
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: movie_api_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: P4$$word
+      MYSQL_HOST: movie-db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: movie_db_debug
+    profiles:
+      - debug
+      - tools
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql_db
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
