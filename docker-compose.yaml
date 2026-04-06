@@ -8,7 +8,6 @@ services:
       MYSQL_DATABASE: movie_api_db
       MYSQL_USER: user
       MYSQL_PASSWORD: P4$$word
-      MYSQL_HOST: movie-db
     ports:
       - "3306:3306"
     volumes:
