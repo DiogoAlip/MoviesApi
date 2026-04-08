@@ -1,11 +1,12 @@
+import "dotenv/config";
 import mysql from "mysql2/promise";
 
 const config = {
-  host: "localhost",
+  host: process.env.MYSQL_HOST || "localhost",
   user: "root",
-  port: 3306,
-  password: "rootpassword",
-  database: "movie_api_db",
+  port: process.env.MYSQL_PORT || 3306,
+  password: process.env.MYSQL_ROOT_PASSWORD || "rootpassword",
+  database: process.env.MYSQL_DATABASE || "movie_api_db",
 };
 
 const connection = await mysql.createConnection(config);
@@ -59,6 +60,4 @@ export class MoviesModel {
     const filteredMovie = movies.splice(movieIndex, 1);
     return movies[movieIndex];
   }
-
-  static seedMovies() {}
 }
