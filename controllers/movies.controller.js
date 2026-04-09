@@ -1,16 +1,16 @@
 import { MoviesModel } from "../models/movies.model.js";
 
 export class MoviesController {
-  static getAllMovies(req, res) {
+  static async getAllMovies(req, res) {
     const { genre } = req.query;
-    const movie = MoviesModel.getAllMovies({ genre });
+    const movie = await MoviesModel.getAllMovies({ genre });
     if (!movie) return res.status(404).json({ message: "Movie not found" });
     res.json(movie);
   }
 
-  static getMovieById(req, res) {
+  static async getMovieById(req, res) {
     const { id } = req.params;
-    const movie = MoviesModel.getMovieById(id);
+    const movie = await MoviesModel.getMovieById(id);
     if (!movie) return res.status(404).json({ message: "Movie not found" });
     res.json(movie);
   }

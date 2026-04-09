@@ -6,18 +6,19 @@ const connection = await DbConection();
 const movies = await readJSON("./movies.json");
 
 export class MoviesModel {
-  static getAllMovies({ genre }) {
-    if (genre) {
-      return movies.filter((movie) =>
-        movie.genre.some((g) => g.toLowerCase() === genre.toLowerCase()),
-      );
-    }
-    return movies;
+  static async getAllMovies({ genre }) {
+    const [result] = await connection.query(
+      "SELECT BIN_TO_UUID(id) id, title, year, director, duration, poster, rate FROM movies",
+    );
+    return result;
   }
 
-  static getMovieById(id) {
-    const movie = movies.find((movie) => movie.id === id);
-    return movie;
+  static async getMovieById(id) {
+    const [result] = await connection.query(
+      "SELECT BIN_TO_UUID(id) id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
+      [id],
+    );
+    return result[0];
   }
 
   static createMovie(movieData) {
