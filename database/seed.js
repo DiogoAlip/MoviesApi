@@ -10,7 +10,7 @@ export async function seed() {
       multipleStatements: true,
     });
 
-    const rutaArchivo = join(import.meta.dirname, "../database.sql");
+    const rutaArchivo = join(import.meta.dirname, "database.sql");
     const sqlQuery = readFileSync(rutaArchivo, "utf8");
 
     await conexion.query(sqlQuery);

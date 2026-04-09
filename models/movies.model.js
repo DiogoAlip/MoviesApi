@@ -1,19 +1,8 @@
-import "dotenv/config";
-import mysql from "mysql2/promise";
-
-const config = {
-  host: process.env.MYSQL_HOST || "localhost",
-  user: "root",
-  port: process.env.MYSQL_PORT || 3306,
-  password: process.env.MYSQL_ROOT_PASSWORD || "rootpassword",
-  database: process.env.MYSQL_DATABASE || "movie_api_db",
-};
-
-const connection = await mysql.createConnection(config);
-
+import { DbConection } from "../config/db.js";
 import { readJSON } from "../utils/readJSON.utils.js";
 import { randomUUID } from "crypto";
 
+const connection = await DbConection();
 const movies = await readJSON("./movies.json");
 
 export class MoviesModel {

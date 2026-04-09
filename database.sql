@@ -1,7 +1,6 @@
 CREATE DATABASE IF NOT EXISTS movie_api_db;
 USE movie_api_db;
 
--- 1. Create Tables
 CREATE TABLE movies (
     id BINARY(16) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -25,12 +24,9 @@ CREATE TABLE movie_genres (
     FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
 );
 
--- 2. Insert Genres
 INSERT INTO genres (name) VALUES 
 ('Drama'), ('Action'), ('Crime'), ('Adventure'), ('Sci-Fi'), 
 ('Romance'), ('Animation'), ('Biography'), ('Fantasy');
-
--- 3. Insert Movies and their Genre Relationships
 
 INSERT INTO movies (id, title, year, director, duration, poster, rate) VALUES 
 (UUID_TO_BIN('dcdd0fad-a94c-4810-8acc-5f108d3b18c3'), 'The Shawshank Redemption', 1994, 'Frank Darabont', 142, 'https://i.ebayimg.com/images/g/4goAAOSwMyBe7hnQ/s-l1200.webp', 9.3);
