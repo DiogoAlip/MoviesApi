@@ -2,8 +2,7 @@ import { MoviesModel } from "../models/movies.model.js";
 
 export class MoviesController {
   static async getAllMovies(req, res) {
-    const { genre } = req.query;
-    const movie = await MoviesModel.getAllMovies({ genre });
+    const movie = await MoviesModel.getAllMovies(req.query);
     if (!movie) return res.status(404).json({ message: "Movie not found" });
     res.json(movie);
   }

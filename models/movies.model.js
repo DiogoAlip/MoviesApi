@@ -6,7 +6,8 @@ const connection = await DbConection();
 const movies = await readJSON("./movies.json");
 
 export class MoviesModel {
-  static async getAllMovies({ genre }) {
+  static async getAllMovies({ genre, title, director, year, duration, rate }) {
+    console.log(genre, title, director, year, duration, rate);
     const [result] = await connection.query(
       "SELECT BIN_TO_UUID(id) id, title, year, director, duration, poster, rate FROM movies",
     );
