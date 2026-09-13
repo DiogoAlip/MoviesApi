@@ -20,26 +20,41 @@ export class MoviesModel {
       return { success, message: JSON.parse(error.message) };
     }
 
-    const [result] = await connection.query(`
-      SELECT
-      BIN_TO_UUID(movies.id) AS id,
-      movies.title,
-      movies.year,
-      movies.director,
-      movies.duration,
-      movies.poster,
-      movies.rate,
-      GROUP_CONCAT(DISTINCT g.name SEPARATOR ', ') AS genres
-      FROM movies
-      LEFT JOIN movie_genres mg ON mg.movie_id = movies.id
-      LEFT JOIN genres g ON g.id = mg.genre_id
-      ${!isObjectEmpty(req) ? " WHERE TRUE " : ""}
-      ${!isObjectEmpty(req) && req.genre ? `AND LOWER(g.name) = LOWER('${req.genre}') ` : ""}
-      ${!isObjectEmpty(req) && req.rate ? `AND movies.rate >= ${req.rate} ` : ""}
-      ${!isObjectEmpty(req) && req.year ? `AND movies.year = ${req.year} ` : ""}
-      ${!isObjectEmpty(req) && req.duration ? `AND movies.duration = ${req.duration} ` : ""}
-      GROUP BY movies.id
-    ;`);
+    const joins = [];
+    const conditions = [];
+    const params = [];
+
+    if (req?.genre) {
+      joins.push(`
+        INNER JOIN movie_genres mg ON mg.movie_id = movies.id
+        INNER JOIN genres g ON g.id = mg.genre_id
+        `);
+      conditions.push("g.name = ?");
+      params.push(req.genre);
+    }
+
+    if (req.year) {
+      conditions.push("year = ?");
+      params.push(req.year);
+    }
+
+    if (req.rate) {
+      conditions.push("rate >= ?");
+      params.push(req.rate);
+    }
+
+    if (req.duration) {
+      conditions.push("duration = ?");
+      params.push(req.duration);
+    }
+    const [result] = await connection.query(
+      `
+    SELECT BIN_TO_UUID(movies.id) id, movies.title, movies.year, movies.director, movies.duration, movies.poster, movies.rate FROM movies
+    ${joins.length > 0 ? `\n ${joins.join(" AND ")}` : ""}
+    ${conditions.length > 0 ? `\n WHERE ${conditions.join(" AND ")}` : ""}
+    `,
+      params,
+    );
     return result;
   }
 
