@@ -1,4 +1,8 @@
 import { MoviesModel } from "../models/movies.model.js";
+import {
+  validateMovie,
+  validatePartialMovie,
+} from "../schemas/movie.schema.js";
 
 export class MoviesController {
   static async getAllMovies(req, res) {

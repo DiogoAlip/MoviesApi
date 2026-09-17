@@ -60,20 +60,36 @@ export class MoviesModel {
 
   static async getMovieById(id) {
     const [result] = await connection.query(
-      "SELECT BIN_TO_UUID(id) id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
+      "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
       [id],
     );
     return result[0];
   }
 
-  static createMovie(movieData) {
-    const newMovie = {
-      id: randomUUID(),
-      ...movieData,
-    };
+  static async createMovie(movieData) {
+    const { title, year, director, duration, poster, rate } = movieData;
 
-    movies.push(newMovie);
-    return newMovie;
+    const [uuidResult] = await connection.query("SELECT UUID() AS uuid");
+    const [{ uuid }] = uuidResult;
+
+    const resultByName = await connection.query(
+      "SELECT * FROM movies WHERE title = ?",
+      [title],
+    );
+    if (resultByName[0]) {
+      return { succes: false, errorMessage: "The movie already exists" };
+    }
+
+    await connection.query(
+      "INSERT INTO movies (id, title, year, director, duration, poster, rate) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
+      [uuid, title, year, director, duration, poster, rate],
+    );
+
+    const [result] = await connection.query(
+      "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
+      [id],
+    );
+    return result[0];
   }
 
   static updateMovie(id, movieData) {

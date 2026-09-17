@@ -5,13 +5,15 @@ import { seed } from "./database/seed.js";
 
 const PORT = process.env.PORT || 1313;
 
+const jsonParser = express.json();
+
 const app = express();
 
 app.disable("x-powered-by");
 
 app.use(middleare);
 
-app.use("/movies", moviesRouter);
+app.use("/movies", jsonParser, moviesRouter);
 
 app.get("/seed", seed);
 
