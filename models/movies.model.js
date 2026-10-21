@@ -1,6 +1,7 @@
 import { validatePartialMovie } from "../schemas/movie.schema.js";
 import { DbConection } from "../config/db.js";
 import { readJSON } from "../utils/readJSON.utils.js";
+import { validate as uuidValidate } from "uuid";
 import { isObjectEmpty } from "../utils/isObjectEmpty.utils.js";
 
 const connection = await DbConection();
@@ -58,6 +59,10 @@ export class MoviesModel {
   }
 
   static async getMovieById(id) {
+    if (!uuidValidate(id)) {
+      return {};
+    }
+
     const [result] = await connection.query(
       "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
       [id],
@@ -104,11 +109,14 @@ export class MoviesModel {
     return movies[movieIndex];
   }
 
-  static deleteMovie(id) {
-    const movieIndex = movies.findIndex((movie) => movie.id === id);
-    if (movieIndex) return null;
+  static async deleteMovie(id) {
+    const movieToDelete = await this.getMovieById(id);
+    if (!isObjectEmpty(movieToDelete)) {
+      await connection.query("DELETE FROM movies WHERE id = UUID_TO_BIN(?)", [
+        id,
+      ]);
+    }
 
-    const filteredMovie = movies.splice(movieIndex, 1);
-    return movies[movieIndex];
+    return movieToDelete;
   }
 }
