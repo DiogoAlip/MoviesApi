@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS genres;
 
 CREATE TABLE movies (
-    id BINARY(16) PRIMARY KEY,
+    id BINARY(16) DEFAULT (UUID_TO_BIN(UUID())) NOT NULL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     year INT NOT NULL,
     director VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE movie_genres (
 
 INSERT INTO genres (name) VALUES 
 ('Drama'), ('Action'), ('Crime'), ('Adventure'), ('Sci-Fi'), 
-('Romance'), ('Animation'), ('Biography'), ('Fantasy');
+('Romance'), ('Animation'), ('Biography'), ('Fantasy'), ('Thriller');
 
 SET @movie1_id = UUID();
 INSERT INTO movies (id, title, year, director, duration, poster, rate) VALUES 

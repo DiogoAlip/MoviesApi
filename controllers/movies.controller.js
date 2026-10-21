@@ -18,12 +18,13 @@ export class MoviesController {
     res.json(movie);
   }
 
-  static createMovie(req, res) {
+  static async createMovie(req, res) {
     const body = req.body;
     const bodyValidation = validateMovie(body);
     if (bodyValidation.error)
       return res.status(400).json({ message: bodyValidation.error.message });
-    res.status(201).json(MoviesModel.createMovie(body));
+    const createdMovie = await MoviesModel.createMovie(body);
+    res.status(201).json(createdMovie);
   }
 
   static updateMovie(req, res) {

@@ -2,7 +2,6 @@ import { validatePartialMovie } from "../schemas/movie.schema.js";
 import { DbConection } from "../config/db.js";
 import { readJSON } from "../utils/readJSON.utils.js";
 import { isObjectEmpty } from "../utils/isObjectEmpty.utils.js";
-import { randomUUID } from "crypto";
 
 const connection = await DbConection();
 const movies = await readJSON("./movies.json");
@@ -69,27 +68,28 @@ export class MoviesModel {
   static async createMovie(movieData) {
     const { title, year, director, duration, poster, rate } = movieData;
 
-    const [uuidResult] = await connection.query("SELECT UUID() AS uuid");
-    const [{ uuid }] = uuidResult;
-
-    const resultByName = await connection.query(
+    const [resultByName] = await connection.query(
       "SELECT * FROM movies WHERE title = ?",
       [title],
     );
+
     if (resultByName[0]) {
       return { succes: false, errorMessage: "The movie already exists" };
     }
 
+    const [id] = await connection.query("SELECT UUID() AS id");
+    const { id: newId } = id[0];
+
     await connection.query(
       "INSERT INTO movies (id, title, year, director, duration, poster, rate) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
-      [uuid, title, year, director, duration, poster, rate],
+      [newId, title, year, director, duration, poster, rate],
     );
 
     const [result] = await connection.query(
       "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
-      [id],
+      [newId],
     );
-    return result[0];
+    return result;
   }
 
   static updateMovie(id, movieData) {
