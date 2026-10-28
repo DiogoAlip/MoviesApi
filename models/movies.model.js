@@ -1,25 +1,10 @@
-import { validatePartialMovie } from "../schemas/movie.schema.js";
 import { DbConection } from "../config/db.js";
-import { readJSON } from "../utils/readJSON.utils.js";
 import { validate as uuidValidate } from "uuid";
-import { isObjectEmpty } from "../utils/isObjectEmpty.utils.js";
 
 const connection = await DbConection();
-const movies = await readJSON("./movies.json");
 
 export class MoviesModel {
   static async getAllMovies(req) {
-    const { success, error } = validatePartialMovie({
-      rate: parseFloat(req.rate) || undefined,
-      year: parseInt(req.year) || undefined,
-      duration: parseInt(req.duration) || undefined,
-      genre: req.genre ? req.genre.split(",") : undefined,
-    });
-
-    if (!success) {
-      return { success, message: JSON.parse(error.message) };
-    }
-
     const joins = [];
     const conditions = [];
     const params = [];
@@ -79,7 +64,7 @@ export class MoviesModel {
     );
 
     if (resultByName[0]) {
-      return { succes: false, errorMessage: "The movie already exists" };
+      return {};
     }
 
     const [id] = await connection.query("SELECT UUID() AS id");
@@ -90,33 +75,28 @@ export class MoviesModel {
       [newId, title, year, director, duration, poster, rate],
     );
 
-    const [result] = await connection.query(
-      "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
-      [newId],
-    );
-    return result;
+    return await MoviesModel.getMovieById(newId);
   }
 
-  static updateMovie(id, movieData) {
-    const movieIndex = movies.findIndex((movie) => movie.id === id);
-    if (movieIndex) return null;
+  static async updateMovie(id, movieData) {
+    const { title, year, director, duration, poster, rate } = movieData;
 
-    movies[movieIndex] = {
-      ...movies[movieIndex],
-      ...movieData,
-    };
+    await connection.query(
+      "UPDATE movies SET title = COALESCE(?, title), year = COALESCE(?, year), director = COALESCE(?, director), duration = COALESCE(?, duration), poster = COALESCE(?, poster), rate = COALESCE(?, rate) WHERE id = UUID_TO_BIN(?)",
+      [title, year, director, duration, poster, rate, id],
+    );
 
-    return movies[movieIndex];
+    return await MoviesModel.getMovieById(id);
   }
 
   static async deleteMovie(id) {
-    const movieToDelete = await this.getMovieById(id);
-    if (!isObjectEmpty(movieToDelete)) {
-      await connection.query("DELETE FROM movies WHERE id = UUID_TO_BIN(?)", [
-        id,
-      ]);
+    const movie = await MoviesModel.getMovieById(id);
+    if (!movie) {
+      return {};
     }
-
-    return movieToDelete;
+    await connection.query("DELETE FROM movies WHERE id = UUID_TO_BIN(?)", [
+      id,
+    ]);
+    return movie;
   }
 }
