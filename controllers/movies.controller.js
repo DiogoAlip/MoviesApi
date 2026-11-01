@@ -1,4 +1,3 @@
-import { MoviesModel } from "../models/movies.model.js";
 import {
   validateMovie,
   validatePartialMovie,
@@ -6,7 +5,11 @@ import {
 import { isObjectEmpty } from "../utils/isObjectEmpty.utils.js";
 
 export class MoviesController {
-  static async getAllMovies(req, res) {
+  constructor({ moviesModel }) {
+    this.moviesModel = moviesModel;
+  }
+
+  getAllMovies = async (req, res) => {
     const query = req.query;
     const { success, error } = validatePartialMovie({
       rate: parseFloat(query.rate) || undefined,
@@ -20,7 +23,7 @@ export class MoviesController {
         .status(400)
         .json({ success, message: JSON.parse(error.message) });
     }
-    const movie = await MoviesModel.getAllMovies({
+    const movie = await this.moviesModel.getAllMovies({
       title: query.title,
       rate: query.rate,
       year: query.year,
@@ -32,32 +35,32 @@ export class MoviesController {
         .status(404)
         .json({ success: false, message: "Movie not found" });
     res.json(movie);
-  }
+  };
 
-  static async getMovieById(req, res) {
+  getMovieById = async (req, res) => {
     const { id } = req.params;
-    const movie = await MoviesModel.getMovieById(id);
+    const movie = await this.moviesModel.getMovieById(id);
     if (isObjectEmpty(movie))
       return res
         .status(404)
         .json({ success: false, message: "Movie not found" });
     res.json(movie);
-  }
+  };
 
-  static async createMovie(req, res) {
+  createMovie = async (req, res) => {
     const body = req.body;
     const bodyValidation = validateMovie(body);
     if (bodyValidation.error)
       return res.status(400).json({ message: bodyValidation.error.message });
-    const createdMovie = await MoviesModel.createMovie(body);
+    const createdMovie = await this.moviesModel.createMovie(body);
     if (isObjectEmpty(createdMovie))
       return res
         .status(500)
         .json({ success: false, message: "Error creating movie" });
     res.status(201).json(createdMovie);
-  }
+  };
 
-  static async updateMovie(req, res) {
+  updateMovie = async (req, res) => {
     const { id } = req.params;
     const body = req.body;
     const partialBodyValidation = validatePartialMovie(body);
@@ -65,7 +68,7 @@ export class MoviesController {
       return res
         .status(400)
         .json({ message: partialBodyValidation.error.message });
-    const movieExists = await MoviesModel.getMovieById(id);
+    const movieExists = await this.moviesModel.getMovieById(id);
     if (isObjectEmpty(movieExists))
       return res.status(404).json({ message: "Movie not found" });
     const bodyValues = Object.values(body);
@@ -75,15 +78,15 @@ export class MoviesController {
     );
     if (isThereDataToUpdate)
       return res.status(400).json({ message: "No value to update" });
-    const movieUpdated = await MoviesModel.updateMovie(id, body);
+    const movieUpdated = await this.moviesModel.updateMovie(id, body);
     res.status(200).json(movieUpdated);
-  }
+  };
 
-  static async deleteMovie(req, res) {
+  deleteMovie = async (req, res) => {
     const { id } = req.params;
-    const deletedMovie = await MoviesModel.deleteMovie(id);
+    const deletedMovie = await this.moviesModel.deleteMovie(id);
     if (isObjectEmpty(deletedMovie))
       return res.status(404).json({ message: "Movie not found" });
     return res.status(200).json(deletedMovie);
-  }
+  };
 }
