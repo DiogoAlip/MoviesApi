@@ -15,6 +15,12 @@ export const createApp = ({ moviesModel }) => {
   app.use(middleare);
 
   const moviesRouter = createMovieRouter({ moviesModel });
+  //const watchlistRouter = createWatchlistRouter({ watchlistModel });
+  //const reviewsRouter = createReviewsRouter({ reviewsModel });
+  //const genresRouter = createGenresRouter({ genresModel });
+  //const authRouter = createAuthRouter({ usersModel });
+  //const personalRouter = createPersonalRouter({ personalModel });
+
   app.use("/movies", jsonParser, moviesRouter);
 
   app.get("/seed", seed);
