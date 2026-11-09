@@ -1,7 +1,7 @@
 import express from "express";
 import { middleare } from "./middleware/middleware.js";
 import { createMovieRouter } from "./routes/movie.routes.js";
-import { seed } from "./database/seed.js";
+import { createSeedRouter } from "./routes/seed.routes.js";
 
 export const createApp = ({ moviesModel }) => {
   const PORT = process.env.PORT || 1313;
@@ -15,6 +15,7 @@ export const createApp = ({ moviesModel }) => {
   app.use(middleare);
 
   const moviesRouter = createMovieRouter({ moviesModel });
+  const seedRouter = createSeedRouter();
   //const watchlistRouter = createWatchlistRouter({ watchlistModel });
   //const reviewsRouter = createReviewsRouter({ reviewsModel });
   //const genresRouter = createGenresRouter({ genresModel });
@@ -23,7 +24,7 @@ export const createApp = ({ moviesModel }) => {
 
   app.use("/movies", jsonParser, moviesRouter);
 
-  app.get("/seed", seed);
+  app.use("/seed", seedRouter);
 
   app.listen(PORT, (error) => {
     if (error) return console.error(error);

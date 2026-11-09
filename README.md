@@ -4,14 +4,13 @@ A RESTful API for managing a movie catalog, built with **Express 5** and **MySQL
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js (ESM) |
-| Framework | Express 5 |
-| Database | MySQL 8.0 |
-| Validation | Zod 4 |
+| Layer            | Technology     |
+| ---------------- | -------------- |
+| Runtime          | Node.js (ESM)  |
+| Framework        | Express 5      |
+| Database         | MySQL 8.0      |
+| Validation       | Zod 4          |
 | Containerization | Docker Compose |
-| DB Admin (optional) | phpMyAdmin |
 
 ## Project Structure
 
@@ -53,7 +52,7 @@ MoviesApi/
 ### 1. Clone & install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/DiogoAlip/MoviesApi.git
 cd MoviesApi
 pnpm install
 ```
@@ -79,9 +78,6 @@ PORT=1313
 docker compose up -d
 ```
 
-> [!TIP]
-> Need phpMyAdmin? Launch it with `docker compose --profile debug up -d` — it'll be available at `http://localhost:8080`.
-
 ### 4. Create tables & seed data
 
 Run the SQL in `database/database.sql` against your MySQL instance, or hit the seed endpoint after the server starts:
@@ -96,28 +92,28 @@ GET /seed
 pnpm dev
 ```
 
-The API starts on **http://localhost:1313** (or whatever `PORT` you set).
+The API starts on **<http://localhost:1313>** (or whatever `PORT` you set).
 
 ## API Endpoints
 
 All routes are prefixed with `/movies`.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/movies` | List all movies (supports query filters) |
-| `GET` | `/movies/:id` | Get a single movie by UUID |
-| `POST` | `/movies` | Create a new movie |
-| `PATCH` | `/movies/:id` | Partially update a movie |
-| `DELETE` | `/movies/:id` | Delete a movie |
+| Method   | Endpoint      | Description                              |
+| -------- | ------------- | ---------------------------------------- |
+| `GET`    | `/movies`     | List all movies (supports query filters) |
+| `GET`    | `/movies/:id` | Get a single movie by UUID               |
+| `POST`   | `/movies`     | Create a new movie                       |
+| `PATCH`  | `/movies/:id` | Partially update a movie                 |
+| `DELETE` | `/movies/:id` | Delete a movie                           |
 
 ### Query Filters (`GET /movies`)
 
-| Param | Type | Example | Behavior |
-|---|---|---|---|
-| `genre` | string | `?genre=Action` | Filter by genre (joins `genres` table) |
-| `year` | int | `?year=1994` | Exact year match |
-| `rate` | float | `?rate=8.5` | Minimum rating (`>=`) |
-| `duration` | int | `?duration=142` | Exact duration match |
+| Param      | Type   | Example         | Behavior                               |
+| ---------- | ------ | --------------- | -------------------------------------- |
+| `genre`    | string | `?genre=Action` | Filter by genre (joins `genres` table) |
+| `year`     | int    | `?year=1994`    | Exact year match                       |
+| `rate`     | float  | `?rate=8.5`     | Minimum rating (`>=`)                  |
+| `duration` | int    | `?duration=142` | Exact duration match                   |
 
 ### Request Body (POST / PATCH)
 
@@ -137,19 +133,20 @@ Validated with Zod. All fields required on `POST`; any subset accepted on `PATCH
 
 #### Field constraints
 
-| Field | Type | Rules |
-|---|---|---|
-| `title` | string | min length 1 |
-| `year` | integer | 1900 – current year |
-| `director` | string | min length 1 |
-| `duration` | integer | positive |
-| `rate` | number | 0 – 10 |
-| `poster` | string | valid URL |
-| `genre` | string[] | `Action`, `Comedy`, `Drama`, `Horror`, `Sci-Fi`, `Romance` |
+| Field      | Type     | Rules                                                      |
+| ---------- | -------- | ---------------------------------------------------------- |
+| `title`    | string   | min length 1                                               |
+| `year`     | integer  | 1900 – current year                                        |
+| `director` | string   | min length 1                                               |
+| `duration` | integer  | positive                                                   |
+| `rate`     | number   | 0 – 10                                                     |
+| `poster`   | string   | valid URL                                                  |
+| `genre`    | string[] | `Action`, `Comedy`, `Drama`, `Horror`, `Sci-Fi`, `Romance` |
 
 ### Response Examples
 
 **200 – Single movie**
+
 ```json
 {
   "id": "a1b2c3d4-...",
@@ -163,11 +160,13 @@ Validated with Zod. All fields required on `POST`; any subset accepted on `PATCH
 ```
 
 **400 – Validation error**
+
 ```json
 { "message": "..." }
 ```
 
 **404 – Not found**
+
 ```json
 { "success": false, "message": "Movie not found" }
 ```

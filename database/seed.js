@@ -13,11 +13,18 @@ export async function seed() {
     const rutaArchivo = join(import.meta.dirname, "database.sql");
     const sqlQuery = readFileSync(rutaArchivo, "utf8");
 
-    await conexion.query(sqlQuery);
-    return true;
+    const [response] = await conexion.query(sqlQuery);
+    return {
+      success: true,
+      message: "Database seeded successfully",
+      data: response,
+    };
   } catch (error) {
-    console.error(error);
-    return false;
+    return {
+      success: false,
+      message: error.sqlMessage,
+      data: null,
+    };
   } finally {
     if (conexion) {
       await conexion.end();
