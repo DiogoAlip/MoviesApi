@@ -1,5 +1,4 @@
 import { DbConection } from "../config/db.js";
-import { validate as uuidValidate } from "uuid";
 
 const connection = await DbConection();
 
@@ -9,34 +8,46 @@ export class MoviesModel {
     const conditions = [];
     const params = [];
 
-    if (req?.genre) {
-      joins.push(`
-        INNER JOIN movie_genres mg ON mg.movie_id = movies.id
-        INNER JOIN genres g ON g.id = mg.genre_id
+    joins.push(`
+        LEFT JOIN movie_genres mg ON mg.movie_id = m.id
+        LEFT JOIN genres g ON g.id = mg.genre_id
         `);
+
+    if (req?.genre) {
       conditions.push("g.name = ?");
       params.push(req.genre);
     }
 
-    if (req.year) {
+    if (req?.title) {
+      conditions.push("title LIKE ? ");
+      params.push(`%${req.title}%`);
+    }
+
+    if (req?.year) {
       conditions.push("year = ?");
       params.push(req.year);
     }
 
-    if (req.rate) {
+    if (req?.rate) {
       conditions.push("rate >= ?");
       params.push(req.rate);
     }
 
-    if (req.duration) {
+    if (req?.duration) {
       conditions.push("duration = ?");
       params.push(req.duration);
     }
+
+    params.push(req.limit ?? 20);
+    params.push(req.offset ?? 0);
+
     const [result] = await connection.query(
       `
-    SELECT BIN_TO_UUID(movies.id) id, movies.title, movies.year, movies.director, movies.duration, movies.poster, movies.rate FROM movies
+    SELECT m.id, m.title, m.year, m.duration, m.poster, m.rate, m.synopsis, GROUP_CONCAT(g.name ORDER BY g.name SEPARATOR ", " ) AS genres FROM movies m
     ${joins.length > 0 ? `\n ${joins.join(" AND ")}` : ""}
     ${conditions.length > 0 ? `\n WHERE ${conditions.join(" AND ")}` : ""}
+    GROUP BY m.id, m.title, m.year, m.duration, m.poster, m.rate, m.synopsis
+    LIMIT ? OFFSET ?
     `,
       params,
     );
@@ -44,47 +55,65 @@ export class MoviesModel {
   }
 
   static async getMovieById(id) {
-    if (!uuidValidate(id)) {
-      return {};
-    }
-
     const [result] = await connection.query(
-      "SELECT BIN_TO_UUID(id) AS id, title, year, director, duration, poster, rate FROM movies WHERE id = UUID_TO_BIN(?);",
+      "SELECT id, title, year, duration, poster, rate, synopsis FROM movies WHERE id = ?;",
       [id],
     );
     return result[0];
   }
 
   static async createMovie(movieData) {
-    const { title, year, director, duration, poster, rate } = movieData;
+    const { title, year, duration, poster, rate, synopsis, genre } = movieData;
 
-    const [resultByName] = await connection.query(
-      "SELECT * FROM movies WHERE title = ?",
-      [title],
-    );
+    const movieExists = await MoviesModel.getAllMovies({ title });
 
-    if (resultByName[0]) {
+    if (movieExists.length > 0 || !genre || genre.length === 0) {
       return {};
     }
 
-    const [id] = await connection.query("SELECT UUID() AS id");
-    const { id: newId } = id[0];
-
     await connection.query(
-      "INSERT INTO movies (id, title, year, director, duration, poster, rate) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?)",
-      [newId, title, year, director, duration, poster, rate],
+      "INSERT INTO movies ( title, year, duration, poster, rate, synopsis ) VALUES ( ?, ?, ?, ?, ?, ?)",
+      [title, year, duration, poster, rate, synopsis],
     );
 
-    return await MoviesModel.getMovieById(newId);
+    const [movieCreated] = await MoviesModel.getAllMovies({ title });
+
+    const [genresList] = await connection.query(
+      "SELECT id FROM genres WHERE name IN(?)",
+      [genre],
+    );
+
+    await connection.query(
+      "INSERT INTO movie_genres (movie_id, genre_id) VALUES ?",
+      [genresList.map((g) => [movieCreated.id, g.id])],
+    );
+
+    return movieCreated;
   }
 
   static async updateMovie(id, movieData) {
-    const { title, year, director, duration, poster, rate } = movieData;
+    const { title, year, duration, poster, rate, synopsis, genre } = movieData;
 
     await connection.query(
-      "UPDATE movies SET title = COALESCE(?, title), year = COALESCE(?, year), director = COALESCE(?, director), duration = COALESCE(?, duration), poster = COALESCE(?, poster), rate = COALESCE(?, rate) WHERE id = UUID_TO_BIN(?)",
-      [title, year, director, duration, poster, rate, id],
+      "UPDATE movies SET title = COALESCE(?, title), year = COALESCE(?, year), duration = COALESCE(?, duration), poster = COALESCE(?, poster), rate = COALESCE(?, rate), synopsis = COALESCE(?, synopsis) WHERE id = ?",
+      [title, year, duration, poster, rate, synopsis, id],
     );
+
+    if (genre && genre.length > 0) {
+      const [genresList] = await connection.query(
+        "SELECT id FROM genres WHERE name IN(?)",
+        [genre],
+      );
+
+      await connection.query("DELETE FROM movie_genres WHERE movie_id = ?", [
+        id,
+      ]);
+
+      await connection.query(
+        "INSERT INTO movie_genres (movie_id, genre_id) VALUES ?",
+        [genresList.map((g) => [id, g.id])],
+      );
+    }
 
     return await MoviesModel.getMovieById(id);
   }
@@ -94,9 +123,8 @@ export class MoviesModel {
     if (!movie) {
       return {};
     }
-    await connection.query("DELETE FROM movies WHERE id = UUID_TO_BIN(?)", [
-      id,
-    ]);
+
+    await connection.query("DELETE FROM movies WHERE id = ?", [id]);
     return movie;
   }
 }
